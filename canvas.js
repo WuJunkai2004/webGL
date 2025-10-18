@@ -15,7 +15,7 @@ export function createCanvas(width, height) {
     const injectScript = (src) => {
       const script = document.createElement('script');
       script.src = src;
-      script.async = false;
+      script.async = true;
       script.onload = () => {
         loadedCount++;
         if (loadedCount === scriptsToLoad.length) {

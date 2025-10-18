@@ -45,3 +45,14 @@ canvas.canvas.addEventListener('mouseup', (event) => {
 canvas.canvas.addEventListener('selectstart', (event) => {
   event.preventDefault();
 });
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+  draw.resetRotation();
+});
+
+document.getElementById('btn-rotate').addEventListener('click', () => {
+  const angle = draw.getRotation();
+  // angle = { h: rotationH, v: rotationV };
+  document.getElementById('btn-rotate').innerText = `显示角度
+水平角度: ${angle.h.toFixed(1)}°\n垂直角度: ${angle.v.toFixed(1)}°`;
+});
