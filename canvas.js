@@ -62,9 +62,23 @@ export function createCanvas(width, height) {
     }
   }
 
+  // 将屏幕坐标转换为WebGL坐标
+  const webGLPos = (x, y) => {
+    const rect = canvas.getBoundingClientRect();
+    const canvasX = x - rect.left;
+    const canvasY = y - rect.top;
+    
+    // 转换为WebGL坐标系 [-1, 1]
+    const webglX = (canvasX / canvas.width) * 2 - 1;
+    const webglY = -((canvasY / canvas.height) * 2 - 1); // Y轴翻转
+    
+    return { x: webglX, y: webglY };
+  }
+
   return {
     canvas,
     load,
     mount,
+    webGLPos,
   };
 }
