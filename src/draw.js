@@ -1,6 +1,9 @@
 // 绘制三角形 (c) 2012 matsuda
 
-export function main(canvas) {
+let rotationH = 30;  // 水平旋转角度，单位：度
+let rotationV = 30;  // 垂直旋转角度，单位：度
+
+export function init(canvas) {
   // 顶点着色器 - 处理顶点位置和颜色传递
   const VSHADER_SOURCE = `
     attribute vec4 a_Position;
@@ -39,31 +42,7 @@ export function main(canvas) {
   // 每个顶点：[x, y, r, g, b, a]
   // - x, y: 位置坐标
   // - r, g, b, a: 颜色分量
-  const vertices = new Float32Array([
-    // 正面 (红色) - 中央正方形
-    -0.2, -0.2,  1.0, 0.0, 0.0, 1.0,  // 左下 红色
-     0.2, -0.2,  1.0, 0.0, 0.0, 1.0,  // 右下 红色
-    -0.2,  0.2,  1.0, 0.0, 0.0, 1.0,  // 左上 红色
-     0.2, -0.2,  1.0, 0.0, 0.0, 1.0,  // 右下 红色
-     0.2,  0.2,  1.0, 0.0, 0.0, 1.0,  // 右上 红色
-    -0.2,  0.2,  1.0, 0.0, 0.0, 1.0,  // 左上 红色
-
-    // 右面 (黄色) - 右侧菱形
-     0.2, -0.2,  1.0, 1.0, 0.0, 1.0,  // 正面右下
-     0.5,  0.0,  1.0, 1.0, 0.0, 1.0,  // 右面右下
-     0.2,  0.2,  1.0, 1.0, 0.0, 1.0,  // 正面右上
-     0.5,  0.4,  1.0, 1.0, 0.0, 1.0,  // 右面右下
-     0.5,  0.0,  1.0, 1.0, 0.0, 1.0,  // 右面右上
-     0.2,  0.2,  1.0, 1.0, 0.0, 1.0,  // 正面右上
-
-    // 顶面 (蓝色) - 上方菱形
-    -0.2,  0.2,  0.0, 0.0, 1.0, 1.0,  // 正面左上
-     0.2,  0.2,  0.0, 0.0, 1.0, 1.0,  // 正面右上
-     0.1,  0.4,  0.0, 0.0, 1.0, 1.0,  // 顶面左上
-     0.2,  0.2,  0.0, 0.0, 1.0, 1.0,  // 正面右上
-     0.5,  0.4,  0.0, 0.0, 1.0, 1.0,  // 顶面右上
-     0.1,  0.4,  0.0, 0.0, 1.0, 1.0   // 顶面左上
-  ]);
+  const vertices = renderCube();
 
   // 创建并绑定缓冲区
   const vertexBuffer = gl.createBuffer();
@@ -104,8 +83,167 @@ export function main(canvas) {
   gl.clearColor(1.0, 1.0, 1.0, 1.0); // 白色背景
   gl.clear(gl.COLOR_BUFFER_BIT);
 
-  // 绘制立方体的三个面
-  gl.drawArrays(gl.TRIANGLES, 0, 18); // 18个顶点 = 6个三角形 = 3个面
+  // 绘制立方体的六个面
+  gl.drawArrays(gl.TRIANGLES, 0, 36); // 36个顶点 = 12个三角形 = 6个面
+}
+
+const renderCube = () => {
+  console.log('渲染立方体');
+  
+  // 将角度转换为弧度
+  const radH = rotationH * Math.PI / 180;
+  const radV = rotationV * Math.PI / 180;
+  
+  // 定义正方体的6个面
+  const faces = [
+    { name: 'front',  color: [1.0, 0.0, 0.0, 1.0], normal: [0, 0, 1] },   // 前面 - 红色
+    { name: 'back',   color: [0.0, 1.0, 0.0, 1.0], normal: [0, 0, -1] },  // 后面 - 绿色
+    { name: 'right',  color: [1.0, 1.0, 0.0, 1.0], normal: [1, 0, 0] },   // 右面 - 黄色
+    { name: 'left',   color: [0.0, 0.0, 1.0, 1.0], normal: [-1, 0, 0] },  // 左面 - 蓝色
+    { name: 'top',    color: [1.0, 0.0, 1.0, 1.0], normal: [0, 1, 0] },   // 顶面 - 洋红
+    { name: 'bottom', color: [0.0, 1.0, 1.0, 1.0], normal: [0, -1, 0] }   // 底面 - 青色
+  ];
+  
+  let vertices = [];
+  
+  for (let face of faces) {
+    // 1. 计算单个正方形面的坐标
+    const faceVertices = calculateFaceVertices(face.normal);
+    
+    // 2. 转换为两个三角形
+    const triangles = faceToTriangles(faceVertices);
+    
+    // 3. 将三角形加入颜色
+    const coloredTriangles = addColorToTriangles(triangles, face.color);
+    
+    // 应用旋转变换
+    const rotatedTriangles = applyRotation(coloredTriangles, radH, radV);
+    
+    // 添加到总顶点数组
+    vertices = vertices.concat(rotatedTriangles);
+  }
+  
+  // 4. 最后拼接为Float32Array
+  return new Float32Array(vertices);
+}
+
+// 1. 计算单个正方形面的坐标
+const calculateFaceVertices = (normal) => {
+  const [nx, ny, nz] = normal;
+  const halfSize = 0.5; // 边长为1，半边长为0.5
+  
+  let vertices = [];
+  
+  if (nz === 1) {
+    // 前面 (z = 0.5)
+    vertices = [
+      [-halfSize, -halfSize, halfSize],  // 左下
+      [halfSize, -halfSize, halfSize],   // 右下
+      [halfSize, halfSize, halfSize],    // 右上
+      [-halfSize, halfSize, halfSize]    // 左上
+    ];
+  } else if (nz === -1) {
+    // 后面 (z = -0.5)
+    vertices = [
+      [halfSize, -halfSize, -halfSize],  // 左下
+      [-halfSize, -halfSize, -halfSize], // 右下
+      [-halfSize, halfSize, -halfSize],  // 右上
+      [halfSize, halfSize, -halfSize]    // 左上
+    ];
+  } else if (nx === 1) {
+    // 右面 (x = 0.5)
+    vertices = [
+      [halfSize, -halfSize, halfSize],   // 左下
+      [halfSize, -halfSize, -halfSize],  // 右下
+      [halfSize, halfSize, -halfSize],   // 右上
+      [halfSize, halfSize, halfSize]     // 左上
+    ];
+  } else if (nx === -1) {
+    // 左面 (x = -0.5)
+    vertices = [
+      [-halfSize, -halfSize, -halfSize], // 左下
+      [-halfSize, -halfSize, halfSize],  // 右下
+      [-halfSize, halfSize, halfSize],   // 右上
+      [-halfSize, halfSize, -halfSize]   // 左上
+    ];
+  } else if (ny === 1) {
+    // 顶面 (y = 0.5)
+    vertices = [
+      [-halfSize, halfSize, halfSize],   // 左下
+      [halfSize, halfSize, halfSize],    // 右下
+      [halfSize, halfSize, -halfSize],   // 右上
+      [-halfSize, halfSize, -halfSize]   // 左上
+    ];
+  } else if (ny === -1) {
+    // 底面 (y = -0.5)
+    vertices = [
+      [-halfSize, -halfSize, -halfSize], // 左下
+      [halfSize, -halfSize, -halfSize],  // 右下
+      [halfSize, -halfSize, halfSize],   // 右上
+      [-halfSize, -halfSize, halfSize]   // 左上
+    ];
+  }
+  
+  return vertices;
+}
+
+// 2. 转换为两个三角形
+const faceToTriangles = (faceVertices) => {
+  // 每个正方形面分解为两个三角形
+  // 三角形1: 顶点0, 1, 2
+  // 三角形2: 顶点0, 2, 3
+  return [
+    faceVertices[0], faceVertices[1], faceVertices[2], // 第一个三角形
+    faceVertices[0], faceVertices[2], faceVertices[3]  // 第二个三角形
+  ];
+}
+
+// 3. 将三角形加入颜色 (保留3D坐标)
+const addColorToTriangles = (triangles, color) => {
+  let result = [];
+  for (let vertex of triangles) {
+    result.push(...vertex, ...color); // [x, y, z, r, g, b, a]
+  }
+  return result;
+}
+
+// 应用旋转变换并投影到2D
+const applyRotation = (triangleData, rotH, rotV) => {
+  let result = [];
+  
+  // 每7个元素为一个顶点 (x, y, z, r, g, b, a)
+  for (let i = 0; i < triangleData.length; i += 7) {
+    let x = triangleData[i];
+    let y = triangleData[i + 1];
+    let z = triangleData[i + 2];
+    
+    // 应用Y轴旋转 (水平旋转)
+    let cosH = Math.cos(rotH);
+    let sinH = Math.sin(rotH);
+    let rotatedX = x * cosH + z * sinH;
+    let rotatedZ = -x * sinH + z * cosH;
+    
+    // 应用X轴旋转 (垂直旋转)
+    let cosV = Math.cos(rotV);
+    let sinV = Math.sin(rotV);
+    let finalY = y * cosV - rotatedZ * sinV;
+    let finalZ = y * sinV + rotatedZ * cosV;
+    
+    // 透视投影
+    let distance = 3; // 观察距离
+    let perspective = distance / (distance + finalZ);
+    
+    result.push(
+      rotatedX * perspective * 0.8,    // x (缩放0.8适应画布)
+      finalY * perspective * 0.8,      // y
+      triangleData[i + 3],             // r
+      triangleData[i + 4],             // g
+      triangleData[i + 5],             // b
+      triangleData[i + 6]              // a
+    );
+  }
+  
+  return result;
 }
 
 // 定义立方体的三个面边界（用于点击检测）
