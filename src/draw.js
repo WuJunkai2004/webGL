@@ -5,8 +5,8 @@ let rotationV = 30;  // 垂直旋转角度，单位：度
 
 // 全局变量用于存储WebGL状态
 let ctx, vertexBuffer;
-let u_ModelMatrix;
-let u_ScaleFactor, scaleFactor = 2.0; // 初始缩放因子
+let u_MvpMatrix;
+let cameraZ = 5.0;
 let animationId = null;
 
 // 从文件加载着色器代码
@@ -51,8 +51,7 @@ export async function init(canvas) {
   ctx.frontFace(ctx.CCW);               // 逆时针为正面
 
   // 获取矩阵uniform变量位置
-  u_ModelMatrix = ctx.getUniformLocation(ctx.program, 'u_ModelMatrix');
-  u_ScaleFactor = ctx.getUniformLocation(ctx.program, 'u_ScaleFactor');
+  u_MvpMatrix = ctx.getUniformLocation(ctx.program, 'u_MvpMatrix');
 
   // 立方体的顶点坐标和颜色
   const vertices = renderCube();
@@ -102,11 +101,21 @@ function renderLoop() {
   modelMatrix.setRotate(rotationV, 1, 0, 0); // X轴旋转
   modelMatrix.rotate(rotationH, 0, 1, 0);    // Y轴旋转
 
-  // 传递模型矩阵到着色器
-  ctx.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+  // 相机位置在(0, 0, cameraZ)，看向原点(0,0,0)，上方向为Y轴正向
+  const viewMatrix = new Matrix4();
+  viewMatrix.setLookAt(0, 0, cameraZ, 0, 0, 0, 0, 1, 0);
 
-  // 传递缩放因子到着色器
-  ctx.uniform1f(u_ScaleFactor, scaleFactor);
+  // 创建投影矩阵 - 定义视锥体
+  const projMatrix = new Matrix4();
+  // 参数：视场角(fov)，宽高比(aspect)，近裁剪面(near)，远裁剪面(far)
+  projMatrix.setPerspective(30, ctx.canvas.width / ctx.canvas.height, 1, 100);
+
+  // 计算MVP矩阵，顺序：proj * view * model
+  const mvpMatrix = new Matrix4();
+  mvpMatrix.set(projMatrix).multiply(viewMatrix).multiply(modelMatrix);
+
+  // 将MVP矩阵传递给着色器
+  ctx.uniformMatrix4fv(u_MvpMatrix, false, mvpMatrix.elements);
 
   // 设置白色背景并清除画布
   ctx.clearColor(1.0, 1.0, 1.0, 1.0); // 白色背景
@@ -228,8 +237,8 @@ export function onDrag(deltaX, deltaY, currentX, currentY) {
 // 滚轮缩放函数
 export function onWheel(delta) {
   const zoomSensitivity = 0.2; // 缩放敏感度
-  scaleFactor += delta * zoomSensitivity;
-  scaleFactor = Math.max(0.5, Math.min(10.0, scaleFactor)); // 限制缩放因子范围
+  cameraZ += delta * zoomSensitivity;
+  cameraZ = Math.max(2, Math.min(20.0, cameraZ)); // 限制相机Z轴范围
 }
 
 // 设置旋转角度
