@@ -56,6 +56,7 @@ export function createCanvas(width, height) {
       if(!is_run) {
         console.warn(`No suitable function found to execute in module "${src}".`);
       }
+      return module;
     } catch (error) {
       console.error(`Error loading module "${src}":`, error);
     }
