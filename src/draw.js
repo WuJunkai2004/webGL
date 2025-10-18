@@ -4,103 +4,89 @@ let rotationH = 30;  // 水平旋转角度，单位：度
 let rotationV = 30;  // 垂直旋转角度，单位：度
 
 // 全局变量用于存储WebGL状态
-let gl, vertexBuffer;
+let ctx, vertexBuffer;
 let u_ModelMatrix;
 let animationId = null;
-let lastFrameTime = 0;
 
-export function init(canvas) {
-  // 顶点着色器 - 简单安全的透视效果
-  const VSHADER_SOURCE = `
-    attribute vec4 a_Position;
-    attribute vec4 a_Color;
-    uniform mat4 u_ModelMatrix;
-    varying vec4 v_Color;
-    void main() {
-      // 先应用模型变换
-      vec4 position = u_ModelMatrix * a_Position;
+// 从文件加载着色器代码
+async function loadShaderFromFile(url) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.text();
+  } catch (error) {
+    console.error(`加载着色器文件失败: ${url}`, error);
+    throw error;
+  }
+}
 
-      // 简单安全的透视计算
-      // 将立方体向后推，让Z坐标变成负数（远离相机）
-      float distance = - position.z + 3.14;  // distance总是正数,避免除零
-      float scale = 2.0 / distance;  // 简单的反比例缩放
-
-      // 应用透视缩放
-      position.x = position.x * scale;
-      position.y = position.y * scale;
-
-      gl_Position = position;
-      v_Color = a_Color;
-    }`;
-
-  // 片元着色器保持不变
-  const FSHADER_SOURCE = `
-    precision mediump float;
-    varying vec4 v_Color;
-    void main() {
-      gl_FragColor = v_Color;
-    }`;
-
+export async function init(canvas) {
   // 获取WebGL上下文和工具函数
   const { getWebGLContext, initShaders } = window;
 
+  // 从文件加载着色器代码
+  const VSHADER_SOURCE = await loadShaderFromFile('/src/draw.vs');
+  const FSHADER_SOURCE = await loadShaderFromFile('/src/draw.fs');
+
   // 获取WebGL渲染上下文
-  gl = getWebGLContext(canvas);
-  if (!gl) {
+  ctx = getWebGLContext(canvas);
+  if (!ctx) {
     console.log('获取WebGL渲染上下文失败');
     return;
   }
 
   // 初始化着色器
-  if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
+  if (!initShaders(ctx, VSHADER_SOURCE, FSHADER_SOURCE)) {
     console.log('初始化着色器失败');
     return;
   }
 
   // 启用深度测试和背面剔除
-  gl.enable(gl.DEPTH_TEST);           // 启用深度测试
-  gl.enable(gl.CULL_FACE);            // 启用面剔除
-  gl.cullFace(gl.BACK);               // 剔除背面
-  gl.frontFace(gl.CCW);               // 逆时针为正面
+  ctx.enable(ctx.DEPTH_TEST);           // 启用深度测试
+  ctx.enable(ctx.CULL_FACE);            // 启用面剔除
+  ctx.cullFace(ctx.BACK);               // 剔除背面
+  ctx.frontFace(ctx.CCW);               // 逆时针为正面
 
   // 获取矩阵uniform变量位置
-  u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
+  u_ModelMatrix = ctx.getUniformLocation(ctx.program, 'u_ModelMatrix');
 
   // 立方体的顶点坐标和颜色
   const vertices = renderCube();
 
   // 创建并绑定缓冲区
-  vertexBuffer = gl.createBuffer();
+  vertexBuffer = ctx.createBuffer();
   if (!vertexBuffer) {
     console.log('创建缓冲区失败');
     return;
   }
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+  ctx.bindBuffer(ctx.ARRAY_BUFFER, vertexBuffer);
+  ctx.bufferData(ctx.ARRAY_BUFFER, vertices, ctx.STATIC_DRAW);
 
   // 每个顶点数据的字节大小 (3个位置分量 + 4个颜色分量) * 4字节
   const FSIZE = vertices.BYTES_PER_ELEMENT;
 
   // 获取并设置位置属性
-  const a_Position = gl.getAttribLocation(gl.program, 'a_Position');
+  const a_Position = ctx.getAttribLocation(ctx.program, 'a_Position');
   if (a_Position < 0) {
     console.log('获取a_Position位置失败');
     return;
   }
 
   // 配置顶点属性指针 - 3D坐标
-  gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, FSIZE * 7, 0);
-  gl.enableVertexAttribArray(a_Position);
+  ctx.vertexAttribPointer(a_Position, 3, ctx.FLOAT, false, FSIZE * 7, 0);
+  ctx.enableVertexAttribArray(a_Position);
 
   // 获取并设置颜色属性
-  const a_Color = gl.getAttribLocation(gl.program, 'a_Color');
+  const a_Color = ctx.getAttribLocation(ctx.program, 'a_Color');
   if (a_Color < 0) {
     console.log('获取a_Color位置失败');
     return;
   }
-  gl.vertexAttribPointer(a_Color, 4, gl.FLOAT, false, FSIZE * 7, FSIZE * 3);
-  gl.enableVertexAttribArray(a_Color);
+  ctx.vertexAttribPointer(a_Color, 4, ctx.FLOAT, false, FSIZE * 7, FSIZE * 3);
+  ctx.enableVertexAttribArray(a_Color);
 
   // 开始渲染循环
   startRenderLoop();
@@ -115,14 +101,14 @@ function renderLoop() {
   modelMatrix.rotate(rotationH, 0, 1, 0);    // Y轴旋转
 
   // 传递模型矩阵到着色器
-  gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+  ctx.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
 
   // 设置白色背景并清除画布
-  gl.clearColor(1.0, 1.0, 1.0, 1.0); // 白色背景
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); // 清除颜色和深度缓冲区
+  ctx.clearColor(1.0, 1.0, 1.0, 1.0); // 白色背景
+  ctx.clear(ctx.COLOR_BUFFER_BIT | ctx.DEPTH_BUFFER_BIT); // 清除颜色和深度缓冲区
 
   // 绘制立方体的六个面
-  gl.drawArrays(gl.TRIANGLES, 0, 36); // 36个顶点 = 12个三角形 = 6个面
+  ctx.drawArrays(ctx.TRIANGLES, 0, 36); // 36个顶点 = 12个三角形 = 6个面
 
   // 请求浏览器在下一次重绘之前调用renderLoop，实现持续动画
   animationId = requestAnimationFrame(renderLoop);

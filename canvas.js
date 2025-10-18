@@ -47,12 +47,17 @@ export function createCanvas(width, height) {
       await readyPromise;
       const module = await import(src);
       let is_run = false;
-      ['main', 'init', 'default'].forEach( fnName => {
-        if (!is_run && module[fnName] && typeof module[fnName] === 'function') {
-          module[fnName](canvas, mount_selector);
+      for (const fnName of ['main', 'init', 'default']) {
+        if (module[fnName] && typeof module[fnName] === 'function') {
+          const result = module[fnName](canvas);
+          if (result && result.then && typeof result.then === 'function') {
+            await result;
+          }
           is_run = true;
+          break;
         }
-      })
+      }
+
       if(!is_run) {
         console.warn(`No suitable function found to execute in module "${src}".`);
       }

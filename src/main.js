@@ -10,22 +10,6 @@ const draw = await canvas.load('/src/draw.js');
 let isDragging = false;
 let lastMousePos = { x: 0, y: 0 };
 
-// 点击事件处理
-canvas.canvas.addEventListener('click', (event) => {
-  const webglPos = canvas.webGLPos(event.clientX, event.clientY);
-  console.log('点击位置:', webglPos);
-  
-  // 调用draw模块的点击检测函数（如果存在）
-  if (draw && typeof draw.checkHit === 'function') {
-    const hitResult = draw.checkHit(webglPos.x, webglPos.y);
-    if (hitResult) {
-      console.log('点击到了:', hitResult);
-    } else {
-      console.log('没有点击到任何对象');
-    }
-  }
-});
-
 // 鼠标按下事件
 canvas.canvas.addEventListener('mousedown', (event) => {
   isDragging = true;
