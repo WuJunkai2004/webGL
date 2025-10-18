@@ -36,6 +36,9 @@ export function main(canvas) {
   }
 
   // 立方体的顶点坐标和颜色 (用等距投影显示三个面)
+  // 每个顶点：[x, y, r, g, b, a]
+  // - x, y: 位置坐标
+  // - r, g, b, a: 颜色分量
   const vertices = new Float32Array([
     // 正面 (红色) - 中央正方形
     -0.2, -0.2,  1.0, 0.0, 0.0, 1.0,  // 左下 红色
@@ -47,19 +50,19 @@ export function main(canvas) {
 
     // 右面 (黄色) - 右侧菱形
      0.2, -0.2,  1.0, 1.0, 0.0, 1.0,  // 正面右下
-     0.5, -0.5,  1.0, 1.0, 0.0, 1.0,  // 右面右下
+     0.5,  0.0,  1.0, 1.0, 0.0, 1.0,  // 右面右下
      0.2,  0.2,  1.0, 1.0, 0.0, 1.0,  // 正面右上
-     0.5, -0.5,  1.0, 1.0, 0.0, 1.0,  // 右面右下
-     0.5, -0.1,  1.0, 1.0, 0.0, 1.0,  // 右面右上
+     0.5,  0.4,  1.0, 1.0, 0.0, 1.0,  // 右面右下
+     0.5,  0.0,  1.0, 1.0, 0.0, 1.0,  // 右面右上
      0.2,  0.2,  1.0, 1.0, 0.0, 1.0,  // 正面右上
 
     // 顶面 (蓝色) - 上方菱形
     -0.2,  0.2,  0.0, 0.0, 1.0, 1.0,  // 正面左上
      0.2,  0.2,  0.0, 0.0, 1.0, 1.0,  // 正面右上
-    -0.5,  0.5,  0.0, 0.0, 1.0, 1.0,  // 顶面左上
+     0.1,  0.4,  0.0, 0.0, 1.0, 1.0,  // 顶面左上
      0.2,  0.2,  0.0, 0.0, 1.0, 1.0,  // 正面右上
-     0.5, -0.1,  0.0, 0.0, 1.0, 1.0,  // 顶面右上
-    -0.5,  0.5,  0.0, 0.0, 1.0, 1.0   // 顶面左上
+     0.5,  0.4,  0.0, 0.0, 1.0, 1.0,  // 顶面右上
+     0.1,  0.4,  0.0, 0.0, 1.0, 1.0   // 顶面左上
   ]);
 
   // 创建并绑定缓冲区
@@ -103,4 +106,64 @@ export function main(canvas) {
 
   // 绘制立方体的三个面
   gl.drawArrays(gl.TRIANGLES, 0, 18); // 18个顶点 = 6个三角形 = 3个面
+}
+
+// 定义立方体的三个面边界（用于点击检测）
+const cubeFaces = [
+  {
+    name: '正面-红色',
+    color: 'red',
+    bounds: { minX: -0.2, maxX: 0.2, minY: -0.2, maxY: 0.2 }
+  },
+  {
+    name: '右面-黄色', 
+    color: 'yellow',
+    // 右面是平行四边形，用简化的矩形近似
+    bounds: { minX: 0.2, maxX: 0.5, minY: -0.5, maxY: 0.1 }
+  },
+  {
+    name: '顶面-蓝色',
+    color: 'blue', 
+    // 顶面也是平行四边形，用简化的边界
+    bounds: { minX: -0.5, maxX: 0.5, minY: 0.1, maxY: 0.5 }
+  }
+];
+
+// 点击检测函数
+export function checkHit(x, y) {
+  console.log(`检测点击位置: (${x.toFixed(3)}, ${y.toFixed(3)})`);
+  
+  for (let face of cubeFaces) {
+    const { minX, maxX, minY, maxY } = face.bounds;
+    
+    if (x >= minX && x <= maxX && y >= minY && y <= maxY) {
+      console.log(`命中: ${face.name}`);
+      return {
+        face: face.name,
+        color: face.color,
+        position: { x, y }
+      };
+    }
+  }
+  
+  return null;
+}
+
+// 拖拽开始函数
+export function onDragStart(x, y) {
+  const hitResult = checkHit(x, y);
+  if (hitResult) {
+    console.log(`开始拖拽: ${hitResult.face}`);
+  }
+}
+
+// 拖拽进行中函数
+export function onDrag(deltaX, deltaY, currentX, currentY) {
+  console.log(`拖拽中: 移动量(${deltaX.toFixed(3)}, ${deltaY.toFixed(3)})`);
+  // 这里可以添加立方体旋转或移动逻辑
+}
+
+// 拖拽结束函数
+export function onDragEnd(x, y) {
+  console.log(`拖拽结束于: (${x.toFixed(3)}, ${y.toFixed(3)})`);
 }
