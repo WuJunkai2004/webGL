@@ -6,6 +6,7 @@ let rotationV = 30;  // 垂直旋转角度，单位：度
 // 全局变量用于存储WebGL状态
 let ctx, vertexBuffer;
 let u_ModelMatrix;
+let u_ScaleFactor, scaleFactor = 2.0; // 初始缩放因子
 let animationId = null;
 
 // 从文件加载着色器代码
@@ -51,6 +52,7 @@ export async function init(canvas) {
 
   // 获取矩阵uniform变量位置
   u_ModelMatrix = ctx.getUniformLocation(ctx.program, 'u_ModelMatrix');
+  u_ScaleFactor = ctx.getUniformLocation(ctx.program, 'u_ScaleFactor');
 
   // 立方体的顶点坐标和颜色
   const vertices = renderCube();
@@ -102,6 +104,9 @@ function renderLoop() {
 
   // 传递模型矩阵到着色器
   ctx.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements);
+
+  // 传递缩放因子到着色器
+  ctx.uniform1f(u_ScaleFactor, scaleFactor);
 
   // 设置白色背景并清除画布
   ctx.clearColor(1.0, 1.0, 1.0, 1.0); // 白色背景
@@ -218,6 +223,13 @@ export function onDrag(deltaX, deltaY, currentX, currentY) {
   rotationH = ((rotationH % 360) + 360) % 360;
 
   console.log(`旋转角度: H=${rotationH.toFixed(1)}°, V=${rotationV.toFixed(1)}°`);
+}
+
+// 滚轮缩放函数
+export function onWheel(delta) {
+  const zoomSensitivity = 0.2; // 缩放敏感度
+  scaleFactor += delta * zoomSensitivity;
+  scaleFactor = Math.max(0.5, Math.min(10.0, scaleFactor)); // 限制缩放因子范围
 }
 
 // 设置旋转角度

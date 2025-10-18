@@ -41,6 +41,14 @@ canvas.canvas.addEventListener('mouseup', (event) => {
   console.log('结束拖拽:', webglPos);
 });
 
+// 鼠标中间滚动事件
+canvas.canvas.addEventListener('wheel', (event) => {
+  event.preventDefault();
+  const delta = Math.sign(event.deltaY);
+  console.log('滚轮滚动:', delta);
+  draw.onWheel(delta);
+});
+
 // 防止拖拽时选中文本
 canvas.canvas.addEventListener('selectstart', (event) => {
   event.preventDefault();
