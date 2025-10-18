@@ -28,7 +28,7 @@ class handler(vercel.API):
                     return
             self.send_text( '\n'.join(os.listdir(url)) )
             return
-    
+
         if(os.path.isfile(url)):
             if(os.path.splitext(url)[1]=='.py'):
                 return vercel.ErrorStatu(self, 403)
@@ -55,7 +55,7 @@ class handler(vercel.API):
                 except AttributeError:
                     vercel.ErrorStatu(self, 503)
             return
-        
+
         vercel.ErrorStatu(self, 404)
 
 

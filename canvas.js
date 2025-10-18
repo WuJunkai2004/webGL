@@ -72,11 +72,11 @@ export function createCanvas(width, height) {
     const rect = canvas.getBoundingClientRect();
     const canvasX = x - rect.left;
     const canvasY = y - rect.top;
-    
+
     // 转换为WebGL坐标系 [-1, 1]
     const webglX = (canvasX / canvas.width) * 2 - 1;
     const webglY = -((canvasY / canvas.height) * 2 - 1); // Y轴翻转
-    
+
     return { x: webglX, y: webglY };
   }
 

@@ -70,7 +70,7 @@ class ServerLog:
         '设置日志名称'
         self.log.name = name
         return self
-    
+
     def center(self, record):
         '将levelname和name居中'
         record.levelname = f"{record.levelname:^7}"
@@ -96,7 +96,7 @@ class URL(server.SimpleHTTPRequestHandler):
         dirname = os.path.abspath( os.getcwd() )
         path = self.path.split('?',1)[0]
         return dirname + path
-        
+
     def translate_args(self):
         '解析URL附带数据'
         path = self.path
@@ -117,7 +117,7 @@ class URL(server.SimpleHTTPRequestHandler):
             else:
                 args[word[0]] = word[1]
         return args
-    
+
     def log_message(self, format, *args):
         message = format % args
         verlog.name('server')(message)
@@ -200,7 +200,7 @@ class DATA(URL):
                 elif item == b'':
                     void_line += 1
             return result
-            
+
         '解析 multipart/form-data 数据'
         # 获取 boundary
         boundary = ''
@@ -294,7 +294,7 @@ class SEND(COOKIE):
     def send_headers(self, headers):
         for i in headers:
             self.send_header(i,headers[i])
-    
+
     def send_code(self,code):
         self.send_response(code)
 
@@ -385,7 +385,7 @@ def start(HandlerClass = API,
         except KeyboardInterrupt:
             sys.exit(0)
 
- 
+
 
 '''HTTP/1.1协议中共定义了八种方法（有时也叫“动作”）来表明Request-URI指定的资源的不同操作方式：
 . OPTIONS - 返回服务器针对特定资源所支持的HTTP请求方法。

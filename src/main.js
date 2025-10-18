@@ -15,44 +15,30 @@ canvas.canvas.addEventListener('mousedown', (event) => {
   isDragging = true;
   const webglPos = canvas.webGLPos(event.clientX, event.clientY);
   lastMousePos = webglPos;
-  
   console.log('开始拖拽:', webglPos);
-  
-  // 调用draw模块的拖拽开始函数（如果存在）
-  if (draw && typeof draw.onDragStart === 'function') {
-    draw.onDragStart(webglPos.x, webglPos.y);
-  }
 });
 
 // 鼠标移动事件
 canvas.canvas.addEventListener('mousemove', (event) => {
-  if (!isDragging) return;
-
+  if (!isDragging){
+    return;
+  }
   const webglPos = canvas.webGLPos(event.clientX, event.clientY);
   const deltaX = webglPos.x - lastMousePos.x;
   const deltaY = webglPos.y - lastMousePos.y;
-  
-  // 调用draw模块的拖拽函数（如果存在）
-  if (draw && typeof draw.onDrag === 'function') {
-    draw.onDrag(deltaX, -deltaY, webglPos.x, webglPos.y);
-  }
-  
+  // 调用draw模块的拖拽函数
+  draw.onDrag(deltaX, -deltaY, webglPos.x, webglPos.y);
   lastMousePos = webglPos;
 });
 
 // 鼠标释放事件
 canvas.canvas.addEventListener('mouseup', (event) => {
-  if (!isDragging) return;
-  
+  if (!isDragging){
+    return;
+  }
   isDragging = false;
   const webglPos = canvas.webGLPos(event.clientX, event.clientY);
-  
   console.log('结束拖拽:', webglPos);
-  
-  // 调用draw模块的拖拽结束函数（如果存在）
-  if (draw && typeof draw.onDragEnd === 'function') {
-    draw.onDragEnd(webglPos.x, webglPos.y);
-  }
 });
 
 // 防止拖拽时选中文本
