@@ -1,4 +1,4 @@
-// 绘制三角形 (c) 2012 matsuda
+import { loadFile } from "/canvas.js";
 
 let rotationH = 30;  // 水平旋转角度，单位：度
 let rotationV = 30;  // 垂直旋转角度，单位：度
@@ -9,27 +9,13 @@ let u_MvpMatrix;
 let cameraZ = 5.0;
 let animationId = null;
 
-// 从文件加载着色器代码
-async function loadShaderFromFile(url) {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return await response.text();
-  } catch (error) {
-    console.error(`加载着色器文件失败: ${url}`, error);
-    throw error;
-  }
-}
-
 export async function init(canvas) {
   // 获取WebGL上下文和工具函数
   const { getWebGLContext, initShaders } = window;
 
   // 从文件加载着色器代码
-  const VSHADER_SOURCE = await loadShaderFromFile('/src/cube.vs');
-  const FSHADER_SOURCE = await loadShaderFromFile('/src/cube.fs');
+  const VSHADER_SOURCE = await loadFile('/src/cube.vs');
+  const FSHADER_SOURCE = await loadFile('/src/cube.fs');
 
   // 获取WebGL渲染上下文
   ctx = getWebGLContext(canvas);

@@ -1,3 +1,16 @@
+export async function loadFile(src) {
+  try {
+    const response = await fetch(src);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.text();
+  } catch (error) {
+    console.error(`加载着色器文件失败: ${src}`, error);
+    throw error;
+  }
+}
+
 export function createCanvas(width, height) {
   const canvas = document.createElement('canvas');
   let mount_selector = undefined;
