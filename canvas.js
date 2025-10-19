@@ -67,6 +67,11 @@ export function createCanvas(width, height) {
     }
   }
 
+  // 监听canvas事件
+  const listen = (event, handler) => {
+    canvas.addEventListener(event, handler);
+  }
+
   // 将屏幕坐标转换为WebGL坐标
   const webGLPos = (x, y) => {
     const rect = canvas.getBoundingClientRect();
@@ -82,6 +87,7 @@ export function createCanvas(width, height) {
 
   return {
     canvas,
+    listen,
     load,
     mount,
     webGLPos,

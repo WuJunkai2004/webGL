@@ -28,8 +28,8 @@ export async function init(canvas) {
   const { getWebGLContext, initShaders } = window;
 
   // 从文件加载着色器代码
-  const VSHADER_SOURCE = await loadShaderFromFile('/src/draw.vs');
-  const FSHADER_SOURCE = await loadShaderFromFile('/src/draw.fs');
+  const VSHADER_SOURCE = await loadShaderFromFile('/src/cube.vs');
+  const FSHADER_SOURCE = await loadShaderFromFile('/src/cube.fs');
 
   // 获取WebGL渲染上下文
   ctx = getWebGLContext(canvas);

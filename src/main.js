@@ -4,14 +4,14 @@ const canvas = createCanvas(800, 800);
 
 canvas.mount('#app');
 
-const draw = await canvas.load('/src/draw.js');
+const draw = await canvas.load('/src/cube.js');
 
 // 鼠标事件处理
 let isDragging = false;
 let lastMousePos = { x: 0, y: 0 };
 
 // 鼠标按下事件
-canvas.canvas.addEventListener('mousedown', (event) => {
+canvas.listen('mousedown', (event) => {
   isDragging = true;
   const webglPos = canvas.webGLPos(event.clientX, event.clientY);
   lastMousePos = webglPos;
@@ -19,7 +19,7 @@ canvas.canvas.addEventListener('mousedown', (event) => {
 });
 
 // 鼠标移动事件
-canvas.canvas.addEventListener('mousemove', (event) => {
+canvas.listen('mousemove', (event) => {
   if (!isDragging){
     return;
   }
@@ -32,7 +32,7 @@ canvas.canvas.addEventListener('mousemove', (event) => {
 });
 
 // 鼠标释放事件
-canvas.canvas.addEventListener('mouseup', (event) => {
+canvas.listen('mouseup', (event) => {
   if (!isDragging){
     return;
   }
@@ -42,7 +42,7 @@ canvas.canvas.addEventListener('mouseup', (event) => {
 });
 
 // 鼠标中间滚动事件
-canvas.canvas.addEventListener('wheel', (event) => {
+canvas.listen('wheel', (event) => {
   event.preventDefault();
   const delta = Math.sign(event.deltaY);
   console.log('滚轮滚动:', delta);
@@ -50,7 +50,7 @@ canvas.canvas.addEventListener('wheel', (event) => {
 });
 
 // 防止拖拽时选中文本
-canvas.canvas.addEventListener('selectstart', (event) => {
+canvas.listen('selectstart', (event) => {
   event.preventDefault();
 });
 
