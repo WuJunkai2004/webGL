@@ -106,3 +106,31 @@ export function createCanvas(width, height) {
     webGLPos,
   };
 }
+
+export function initVertexBuffers(ctx, vertices, attributes) {
+  const buffer = ctx.createBuffer();
+  if (!buffer) {
+    console.log('创建缓冲区失败');
+    return false;
+  }
+
+  ctx.bindBuffer(ctx.ARRAY_BUFFER, buffer);
+  ctx.bufferData(ctx.ARRAY_BUFFER, vertices, ctx.STATIC_DRAW);
+
+  const FSIZE = vertices.BYTES_PER_ELEMENT;
+  const stride = attributes.reduce((sum, attr) => sum + attr.size, 0);
+
+  let offset = 0;
+  for (const attr of attributes) {
+    const location = ctx.getAttribLocation(ctx.program, attr.name);
+    if (location < 0) {
+      console.log(`获取${attr.name}位置失败`);
+      return false;
+    }
+    ctx.vertexAttribPointer(location, attr.size, ctx.FLOAT, false, FSIZE * stride, FSIZE * offset);
+    ctx.enableVertexAttribArray(location);
+    offset += attr.size;
+  }
+
+  return true;
+}

@@ -1,4 +1,4 @@
-import { loadFile } from "/canvas.js";
+import { loadFile, initVertexBuffers } from "/canvas.js";
 
 let rotationH = 30;  // 水平旋转角度，单位：度
 let rotationV = 30;  // 垂直旋转角度，单位：度
@@ -42,38 +42,17 @@ export async function init(canvas) {
   // 立方体的顶点坐标和颜色
   const vertices = renderCube();
 
-  // 创建并绑定缓冲区
-  vertexBuffer = ctx.createBuffer();
-  if (!vertexBuffer) {
-    console.log('创建缓冲区失败');
+  // 定义顶点属性
+  const attributes = [
+    { name: 'a_Position', size: 3 },
+    { name: 'a_Color', size: 4 },
+  ];
+
+  // 初始化顶点缓冲区
+  if (!initVertexBuffers(ctx, vertices, attributes)) {
+    console.log('初始化顶点缓冲区失败');
     return;
   }
-
-  ctx.bindBuffer(ctx.ARRAY_BUFFER, vertexBuffer);
-  ctx.bufferData(ctx.ARRAY_BUFFER, vertices, ctx.STATIC_DRAW);
-
-  // 每个顶点数据的字节大小 (3个位置分量 + 4个颜色分量) * 4字节
-  const FSIZE = vertices.BYTES_PER_ELEMENT;
-
-  // 获取并设置位置属性
-  const a_Position = ctx.getAttribLocation(ctx.program, 'a_Position');
-  if (a_Position < 0) {
-    console.log('获取a_Position位置失败');
-    return;
-  }
-
-  // 配置顶点属性指针 - 3D坐标
-  ctx.vertexAttribPointer(a_Position, 3, ctx.FLOAT, false, FSIZE * 7, 0);
-  ctx.enableVertexAttribArray(a_Position);
-
-  // 获取并设置颜色属性
-  const a_Color = ctx.getAttribLocation(ctx.program, 'a_Color');
-  if (a_Color < 0) {
-    console.log('获取a_Color位置失败');
-    return;
-  }
-  ctx.vertexAttribPointer(a_Color, 4, ctx.FLOAT, false, FSIZE * 7, FSIZE * 3);
-  ctx.enableVertexAttribArray(a_Color);
 
   // 开始渲染循环
   startRenderLoop();
