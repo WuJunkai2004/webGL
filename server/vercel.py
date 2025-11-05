@@ -158,6 +158,15 @@ class DATA(URL):
             raise TypeError('415 Unsupported Media Type')
         else:
             return xml.parsers(data)
+        
+    def parse_text(self, data):
+        if(type(data) == str):
+            data = data.encode('utf-8')
+        if(type(data) == bytes):
+            data = data.decode('utf-8')
+        return {
+            'raw': data
+        }
 
     def parse_data(self, data: bytearray):
         def bytesplit(data: bytes, sep: bytes):
@@ -240,6 +249,9 @@ class DATA(URL):
                 return self.parse_xml(data)
             elif(method == 'multipart/form-data'):
                 return self.parse_data(data)
+            elif(method == 'text/plain'):
+                return self.parse_text(data)
+
 
 
 class COOKIE(DATA):
@@ -284,6 +296,8 @@ class SEND(COOKIE):
         f.close()
 
     def send_json(self, data: dict | list):
+        if not hasattr(self, '_headers_buffer'):
+            self._headers_buffer = []
         for header_str in self._headers_buffer:
             if header_str.startswith(b'Content-Type:'):
                 self._headers_buffer.remove(header_str)
