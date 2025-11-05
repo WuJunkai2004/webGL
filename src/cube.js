@@ -4,7 +4,7 @@ let rotationH = 30;  // 水平旋转角度，单位：度
 let rotationV = 30;  // 垂直旋转角度，单位：度
 
 // 全局变量用于存储WebGL状态
-let ctx, vertexBuffer;
+let ctx;
 let u_MvpMatrix;
 let cameraZ = 5.0;
 let animationId = null;
@@ -14,8 +14,8 @@ export async function init(canvas) {
   const { getWebGLContext, initShaders } = window;
 
   // 从文件加载着色器代码
-  const VSHADER_SOURCE = await loadFile('/src/cube.vs');
-  const FSHADER_SOURCE = await loadFile('/src/cube.fs');
+  const vShaderSource = await loadFile('/src/cube.vs');
+  const fShaderSource = await loadFile('/src/cube.fs');
 
   // 获取WebGL渲染上下文
   ctx = getWebGLContext(canvas);
@@ -25,7 +25,7 @@ export async function init(canvas) {
   }
 
   // 初始化着色器
-  if (!initShaders(ctx, VSHADER_SOURCE, FSHADER_SOURCE)) {
+  if (!initShaders(ctx, vShaderSource, fShaderSource)) {
     console.log('初始化着色器失败');
     return;
   }
