@@ -22,7 +22,8 @@ export function createCanvas(width, height) {
       '/lib/webgl-utils.js',
       '/lib/webgl-debug.js',
       '/lib/cuon-utils.js',
-      '/lib/cuon-matrix.js'
+      '/lib/cuon-mv.js',
+      '/lib/cuon-matrix.js',
     ];
     let loadedCount = 0;
     const injectScript = (src) => {
