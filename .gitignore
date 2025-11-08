@@ -5,3 +5,9 @@ __pycache__/
 
 # logs
 *.log
+
+# server/model
+server/models/*
+
+# reference
+reference/*
