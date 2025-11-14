@@ -9,6 +9,32 @@
 <body>
   <div id="app"></div>
   <script type="module" src="/src/craft-main.js"></script>
+  <div class="controls">
+    <button id="btn-reset">重置</button>
+  </div>
+
+  <style>
+    body {
+      display: flex;
+    }
+
+    .controls {
+      width: 200px;
+      padding: 20px;
+      border-left: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    button {
+      padding: 10px 15px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
 </body>
 
 </html>

@@ -35,3 +35,26 @@ canvas.listen("mouseup", (event) => {
     const webglPos = canvas.webGLPos(event.clientX, event.clientY);
     console.log("结束拖拽:", webglPos);
 })
+
+// 监听键盘 WASD 控制摄像机移动
+window.addEventListener('keydown', (e) => {
+    const key = e.key.toLowerCase();
+    const step = 0.1; // 与 craft.js 中 MOVE_STEP 对应
+    if (key === 'w') {
+        craft.moveCamera(step, 0);
+        e.preventDefault();
+    } else if (key === 's') {
+        craft.moveCamera(-step, 0);
+        e.preventDefault();
+    } else if (key === 'a') {
+        craft.moveCamera(0, -step);
+        e.preventDefault();
+    } else if (key === 'd') {
+        craft.moveCamera(0, step);
+        e.preventDefault();
+    }
+});
+
+document.getElementById("btn-reset").addEventListener("click", () => {
+    craft.reset();
+});

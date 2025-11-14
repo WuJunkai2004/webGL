@@ -7,6 +7,8 @@ let ctx; // WebGL 上下文
 let u_MvpMatrix;    // u_MvpMatrix uniform 的位置
 let mvpMatrix; // 投影-视图 矩阵
 let nIndices = 0; // 索引数量，用于 drawElements
+// 摄像机位置（世界坐标），初始置于盒子内部中心
+let camX = 0.0, camY = 0.0, camZ = 0.0;
 
 export async function init(canvas) {
   const { getWebGLContext, initShaders, Matrix4 } = window;
@@ -53,6 +55,30 @@ export async function init(canvas) {
     requestAnimationFrame(tick, canvas);
   };
   tick();
+}
+
+// 将相机沿局部前向/右向移动（forward: 正为向前，right: 正为向右）
+export function moveCamera(forward, right) {
+  // 根据当前旋转角计算前向向量
+  const toRad = (d) => d * Math.PI / 180.0;
+  const yaw = toRad(rotationH);
+  const pitch = toRad(rotationV);
+  const frontX = Math.cos(pitch) * Math.sin(yaw);
+  const frontY = Math.sin(pitch);
+  const frontZ = -Math.cos(pitch) * Math.cos(yaw);
+
+  // 计算右向量 (cross(front, up))，up=(0,1,0)
+  let rightX = -frontZ;
+  let rightY = 0.0;
+  let rightZ = frontX;
+  // 归一化右向量
+  const len = Math.hypot(rightX, rightY, rightZ) || 1.0;
+  rightX /= len; rightY /= len; rightZ /= len;
+
+  // 应用前向移动
+  camX += frontX * forward + rightX * right;
+  camY += frontY * forward + rightY * right;
+  camZ += frontZ * forward + rightZ * right;
 }
 
 function initCubeTexture(gl) {
@@ -183,10 +209,24 @@ function render() {
   modelMatrix.setRotate(rotationV, 1, 0, 0);
   // 绕 Y 轴旋转（水平旋转）
   modelMatrix.rotate(rotationH, 0, 1, 0);
+  // 计算视图矩阵（基于摄像机位置和当前旋转）并组合最终的 MVP：P * V * M
+  const viewMatrix = new Matrix4();
+  // 计算朝向向量
+  const toRad = (d) => d * Math.PI / 180.0;
+  const yaw = toRad(rotationH);
+  const pitch = toRad(rotationV);
+  const frontX = Math.cos(pitch) * Math.sin(yaw);
+  const frontY = Math.sin(pitch);
+  const frontZ = -Math.cos(pitch) * Math.cos(yaw);
 
-  // 计算最终的 MVP 矩阵：先复制 mvpMatrix（包含 P*V），再乘以 model 矩阵
+  viewMatrix.lookAt(camX, camY, camZ,
+                    camX + frontX, camY + frontY, camZ + frontZ,
+                    0.0, 1.0, 0.0);
+
+  // 计算最终矩阵：先是投影（mvpMatrix 存储的是 projection），再乘以视图和模型
   const finalMvp = new Matrix4();
   finalMvp.set(mvpMatrix);
+  finalMvp.multiply(viewMatrix);
   finalMvp.multiply(modelMatrix);
 
   // 上传最终的 MVP 矩阵到着色器
@@ -216,4 +256,14 @@ export function onDrag(deltaX, deltaY, currentX, currentY) {
   rotationH = ((rotationH % 360) + 360) % 360;
 
   console.log(`旋转角度: H=${rotationH.toFixed(1)}°, V=${rotationV.toFixed(1)}°`);
+}
+
+// 重置位置
+export function reset() {
+  rotationH = 0;
+  rotationV = 0;
+  camX = 0.0;
+  camY = 0.0;
+  camZ = 0.0;
+  console.log('重置旋转和位置');
 }
